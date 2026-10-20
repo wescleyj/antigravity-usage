@@ -1,0 +1,7 @@
+.env
+*.zip
+node_modules/
+.DS_Store
+coverage/
+*.log
+/tmp/

@@ -1,0 +1,21 @@
+FROM alpine:3.21
+
+# Install runtime dependencies for testing GJS extension
+RUN apk add --no-cache \
+    gjs \
+    libsoup3 \
+    libsecret \
+    make \
+    bash
+
+# Create non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copy project files
+COPY --chown=appuser:appgroup . .
+
+USER appuser
+
+CMD ["gjs", "-m", "tests/run_tests.js"]
