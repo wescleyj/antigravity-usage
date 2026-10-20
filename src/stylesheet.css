@@ -1,0 +1,228 @@
+/* Antigravity Quota Usage — GNOME Shell St Stylesheet */
+
+/* Top Bar Panel Button */
+.antigravity-panel-button {
+    font-weight: bold;
+    padding: 0 6px;
+    spacing: 4px;
+}
+
+.antigravity-panel-icon {
+    icon-size: 16px;
+}
+
+.antigravity-panel-label {
+    font-size: 11pt;
+    font-weight: 600;
+}
+
+/* Popup Menu Container */
+.antigravity-popup-menu {
+    min-width: 340px;
+    padding: 4px 0;
+}
+
+/* Header Section */
+.antigravity-popup-header {
+    padding: 10px 14px;
+    spacing: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.antigravity-header-title {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.antigravity-header-subtitle {
+    font-size: 9pt;
+    color: #9a9996;
+}
+
+/* Process Monitor Badges */
+.badge-active {
+    background-color: rgba(46, 194, 126, 0.25);
+    color: #2ec27e;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 8pt;
+    font-weight: bold;
+}
+
+.badge-inactive {
+    background-color: rgba(154, 153, 150, 0.2);
+    color: #9a9996;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 8pt;
+    font-weight: 500;
+}
+
+/* Quota Bucket Cards */
+.quota-card {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 4px 10px;
+    spacing: 4px;
+}
+
+.quota-card-title {
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.quota-card-meta {
+    font-size: 8.5pt;
+    color: #c0bfbc;
+}
+
+/* Progress Bars & Health Indicators */
+.quota-progress-track {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    height: 6px;
+}
+
+.quota-progress-good {
+    background-color: #2ec27e;
+    border-radius: 4px;
+}
+
+.quota-progress-warn {
+    background-color: #f5c211;
+    border-radius: 4px;
+}
+
+.quota-progress-crit {
+    background-color: #e01b24;
+    border-radius: 4px;
+}
+
+.quota-good {
+    color: #2ec27e;
+}
+
+.quota-warn {
+    color: #f5c211;
+}
+
+.quota-crit {
+    color: #e01b24;
+}
+
+/* Model Families Section */
+.model-families-header {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #77767b;
+    padding: 6px 14px 2px 14px;
+    text-transform: uppercase;
+}
+
+.model-family-item {
+    padding: 5px 14px;
+    spacing: 8px;
+}
+
+.model-family-name {
+    font-size: 10pt;
+}
+
+.model-active-pill {
+    background-color: #3584e4;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 1px 6px;
+    font-size: 7.5pt;
+    font-weight: bold;
+}
+
+.model-quota-percent {
+    font-size: 9.5pt;
+    font-weight: 600;
+}
+
+/* Action Controls */
+.antigravity-actions-bar {
+    padding: 8px 10px 4px 10px;
+    spacing: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.refresh-button {
+    border-radius: 6px;
+    padding: 6px 12px;
+    background-color: rgba(255, 255, 255, 0.08);
+    font-weight: 600;
+    font-size: 9.5pt;
+}
+
+.refresh-button:hover {
+    background-color: rgba(255, 255, 255, 0.16);
+}
+
+.refresh-button:active {
+    background-color: rgba(53, 132, 228, 0.4);
+}
+
+/* Quota Group Headers */
+.quota-group-header {
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #9a9996;
+    padding: 6px 14px 2px 14px;
+    text-transform: uppercase;
+}
+
+.quota-card-percent {
+    font-size: 9.5pt;
+    font-weight: 600;
+}
+
+/* Reload Mode Controls */
+.reload-options-box {
+    padding: 4px 12px;
+    spacing: 4px;
+}
+
+.reload-btn {
+    border-radius: 6px;
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.06);
+    font-size: 8.5pt;
+}
+
+.reload-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.reload-btn-selected {
+    border-radius: 6px;
+    padding: 4px 8px;
+    background-color: rgba(53, 132, 228, 0.35);
+    color: #ffffff;
+    font-size: 8.5pt;
+    font-weight: bold;
+}
+
+/* Setting Toggles */
+.toggle-btn-on {
+    border-radius: 6px;
+    padding: 3px 8px;
+    background-color: rgba(46, 194, 126, 0.25);
+    color: #2ec27e;
+    font-size: 8pt;
+    font-weight: bold;
+}
+
+.toggle-btn-off {
+    border-radius: 6px;
+    padding: 3px 8px;
+    background-color: rgba(154, 153, 150, 0.2);
+    color: #9a9996;
+    font-size: 8pt;
+    font-weight: 500;
+}
+

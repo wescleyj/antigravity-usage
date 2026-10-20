@@ -1,0 +1,17 @@
+{
+  "uuid": "antigravity-usage@wescley.dev",
+  "name": "Antigravity Quota Usage",
+  "description": "Monitor Antigravity CLI quota usage, model limits and burn rate in GNOME Top Bar.",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51",
+    "52"
+  ],
+  "url": "https://github.com/wescley/antigravity-usage",
+  "version": 1
+}
