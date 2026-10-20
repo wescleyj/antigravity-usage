@@ -78,6 +78,15 @@
     color: #c0bfbc;
 }
 
+.quota-card-meta-row {
+    margin-top: 2px;
+}
+
+.popup-loading-label {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
 /* Progress Bars & Health Indicators */
 .quota-progress-track {
     background-color: rgba(255, 255, 255, 0.12);

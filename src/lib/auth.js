@@ -124,7 +124,7 @@ export function getKeyringAuthToken(secretLookupFn = null) {
  * @param {Function|null} [subprocessRunnerFn=null] - Injected runner for testing
  * @returns {Promise<boolean>}
  */
-export async function refreshTokenViaAgyCli(subprocessRunnerFn = null) {
+export async function refreshTokenViaAgyCli(subprocessRunnerFn = null, customBinPath = null) {
     const fixedArgs = ['agy', 'models'];
 
     if (typeof subprocessRunnerFn === 'function') {
@@ -132,7 +132,8 @@ export async function refreshTokenViaAgyCli(subprocessRunnerFn = null) {
         return res;
     }
 
-    const binPath = GLib.find_program_in_path('agy') ||
+    const binPath = customBinPath ||
+        GLib.find_program_in_path('agy') ||
         GLib.build_filenamev([GLib.get_home_dir(), '.local', 'bin', 'agy']);
 
     if (!binPath || !GLib.file_test(binPath, GLib.FileTest.IS_EXECUTABLE)) {

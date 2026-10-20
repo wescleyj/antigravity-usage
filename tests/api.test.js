@@ -857,10 +857,10 @@ test('SEC-API-02: Response payload size limit (MAX_RESPONSE_BYTES = 5MB) prevent
 });
 
 test('SEC-API-03: Subprocess runner validates binary IS_EXECUTABLE before launching Gio.Subprocess', async () => {
-    // Calling refreshTokenViaAgyCli() without mock runner in test env where agy is not installed or not executable
+    // Calling refreshTokenViaAgyCli() with nonexistent/non-executable binary
     let threw = false;
     try {
-        await refreshTokenViaAgyCli();
+        await refreshTokenViaAgyCli(null, '/nonexistent/bin/agy');
     } catch (err) {
         threw = true;
         assertTrue(err.message.includes('not found or not executable'), 'clean error when binary is not executable');

@@ -17,7 +17,13 @@ import {
     formatReloadMenuOptions,
     truncateString,
 } from '../src/lib/viewModel.js';
-import ExtensionClass from '../src/extension.js';
+import ExtensionClass, { _setShellUiForTesting } from '../src/extension.js';
+import { UsageHistoryStore } from '../src/lib/history.js';
+
+function getTempTestFile() {
+    const tmpDir = GLib.build_filenamev([GLib.get_tmp_dir(), 'antigravity-ui-test-' + Math.random().toString(36).substring(2)]);
+    return GLib.build_filenamev([tmpDir, 'history.json']);
+}
 
 // Helper to read workspace file contents as UTF-8 string
 function readProjectFile(relPath) {
@@ -546,5 +552,206 @@ test('QA-BUG-UI-03: Popup controls must include reload mode selector and showPan
         'src/extension.js _updateUI must check showPanelPercent before displaying percentage on Top Bar'
     );
 });
+
+test('QA-BUG-UI-04: St.BoxLayout uses Clutter.Orientation.VERTICAL instead of removed vertical property for GNOME Shell 48-51+ compatibility', () => {
+    const extCode = readProjectFile('src/extension.js');
+
+    // 1. Verify that 'vertical: true' is not used in St.BoxLayout constructors
+    const hasVerticalProperty = /new\s+St\.BoxLayout\(\s*\{[^}]*vertical\s*:/m.test(extCode);
+    assertTrue(
+        !hasVerticalProperty,
+        'src/extension.js must not use removed "vertical:" property on St.BoxLayout in GNOME Shell 48-51+'
+    );
+
+    // 2. Verify that orientation is used (e.g. Clutter.Orientation.VERTICAL)
+    const usesOrientationVertical = extCode.includes('Clutter.Orientation.VERTICAL') ||
+        extCode.includes('Orientation.VERTICAL') ||
+        extCode.includes('orientation:');
+    assertTrue(
+        usesOrientationVertical,
+        'src/extension.js must use Clutter.Orientation.VERTICAL for vertical layout'
+    );
+
+    // 3. Verify that margin_top / margin_bottom are not passed in GObject constructors
+    const hasMarginProps = /new\s+St\.(BoxLayout|Label)\(\s*\{[^}]*margin_(top|bottom)\s*:/m.test(extCode);
+    assertTrue(
+        !hasMarginProps,
+        'src/extension.js must not pass margin_top/margin_bottom in GObject constructors; use style or CSS classes'
+    );
+
+    // 4. Runtime simulation with a GNOME Shell 51 mock that throws when 'vertical' is passed
+    class MockStBoxLayout {
+        constructor(props = {}) {
+            if (Object.hasOwn(props, 'vertical')) {
+                throw new Error('No property vertical on StBoxLayout');
+            }
+            if (Object.hasOwn(props, 'margin_top') || Object.hasOwn(props, 'margin_bottom')) {
+                throw new Error('No property margin_top on StBoxLayout');
+            }
+            this.props = props;
+        }
+        add_child() {}
+    }
+
+    // Verify mock throws when vertical: true is supplied (reproducing GNOME 51 error)
+    assertThrows(() => {
+        new MockStBoxLayout({ vertical: true });
+    }, 'GNOME Shell 51 throws on vertical property');
+
+    // Verify mock accepts orientation: 1 (Clutter.Orientation.VERTICAL)
+    const validBox = new MockStBoxLayout({ orientation: 1 });
+    assertEqual(validBox.props.orientation, 1, 'orientation is accepted');
+});
+
+test('QA-BUG-UI-05: this._isProcessRunning must be boolean, not object, preventing false CLI Ativo status', async () => {
+    const ext = new ExtensionClass({
+        uuid: 'antigravity-usage@wescley.dev',
+        path: GLib.get_current_dir() + '/src',
+    });
+
+    ext.enable();
+    // Mock client to prevent real network calls
+    ext._client = {
+        fetchUsageSnapshot: async () => null,
+        destroy: () => {},
+    };
+    try {
+        await ext._refresh();
+        assertEqual(
+            typeof ext._isProcessRunning,
+            'boolean',
+            'this._isProcessRunning must be a primitive boolean, got ' + typeof ext._isProcessRunning
+        );
+
+        // When no agy process is running, it must be strictly false and formatHeaderState must show CLI Inativo
+        if (!ext._isProcessRunning) {
+            assertEqual(ext._isProcessRunning, false, 'must be strictly false');
+            const header = formatHeaderState(null, ext._isProcessRunning);
+            assertEqual(header.processStatus.label, 'CLI Inativo', 'formatHeaderState must report CLI Inativo when process is not running');
+        }
+
+        // Static check: extension.js must not assign checkAgyRunning() object directly to _isProcessRunning
+        const extCode = readProjectFile('src/extension.js');
+        assertTrue(
+            !extCode.includes('this._isProcessRunning = checkAgyRunning();'),
+            'src/extension.js must convert checkAgyRunning() result to boolean'
+        );
+    } finally {
+        ext.disable();
+        ext.destroy();
+    }
+});
+
+test('QA-BUG-UI-06: ReloadScheduler contract alignment (getReloadMode) and interval mode values (60, 300, 900, 1800, 3600)', () => {
+    // 1. Test formatReloadMenuOptions logic in viewModel.js
+    // 1a: Auto mode active (180s running)
+    const optsAuto = formatReloadMenuOptions('auto', true);
+    const autoItem = optsAuto.find(o => o.id === 'auto');
+    assertTrue(autoItem.isSelected, 'auto is selected when mode is auto');
+    assertEqual(autoItem.modeValue, 'auto', 'auto modeValue is "auto"');
+
+    // 1b: Manual mode 300s (5m)
+    const opts300 = formatReloadMenuOptions(300, false);
+    const item300 = opts300.find(o => o.seconds === 300);
+    assertTrue(item300.isSelected, '300s is selected when mode is 300');
+    assertEqual(item300.modeValue, 300, '300s modeValue is 300');
+    const autoItem300 = opts300.find(o => o.id === 'auto');
+    assertTrue(!autoItem300.isSelected, 'auto is NOT selected when manual mode 300s is active');
+
+    // 1c: Manual mode 1800s (30m) - Bug reproduction: must NOT be treated as auto mode!
+    const opts1800 = formatReloadMenuOptions(1800, false);
+    const autoItem1800 = opts1800.find(o => o.id === 'auto');
+    assertTrue(!autoItem1800.isSelected, 'auto is NOT selected when manual mode 1800s (30m) is active');
+    const item1800 = opts1800.find(o => o.id === '30m');
+    assertTrue(item1800 !== undefined, '30m option exists');
+    assertEqual(item1800.seconds, 1800, '30m option seconds is 1800');
+    assertTrue(item1800.isSelected, '30m option must be selected when mode is 1800');
+    assertEqual(item1800.modeValue, 1800, '1800s modeValue is 1800');
+
+    // 2. Integration / runtime simulation with Mock St & Clutter
+    class MockStWidget {
+        constructor(props = {}) {
+            this.props = props;
+            this.children = [];
+            this.signals = {};
+            this.text = props.text || '';
+            this.label = props.label || '';
+            this.style_class = props.style_class || '';
+        }
+        add_child(child) {
+            this.children.push(child);
+        }
+        destroy_all_children() {
+            this.children = [];
+        }
+        connect(signal, cb) {
+            this.signals[signal] = cb;
+        }
+        remove_style_class_name() {}
+        add_style_class_name() {}
+    }
+
+    const mockSt = {
+        BoxLayout: MockStWidget,
+        Label: MockStWidget,
+        Button: MockStWidget,
+        Icon: MockStWidget,
+    };
+    const mockClutter = {
+        Orientation: { VERTICAL: 1, HORIZONTAL: 0 },
+        ActorAlign: { CENTER: 2 },
+    };
+
+    _setShellUiForTesting({ St: mockSt, Clutter: mockClutter });
+
+    try {
+        const ext = new ExtensionClass({
+            uuid: 'antigravity-usage@wescley.dev',
+            path: GLib.get_current_dir() + '/src',
+        });
+
+        ext.enable();
+        ext._historyStore = new UsageHistoryStore(getTempTestFile());
+        ext._scheduler._historyStore = ext._historyStore;
+        ext._popupContainer = new MockStWidget();
+
+        // 2a. Verify that _renderPopupMenu executes without throwing TypeError on this._scheduler.getMode()
+        ext._renderPopupMenu(false);
+
+        // Find the reload box children (buttons)
+        // Find button corresponding to 5m (300s)
+        const allButtons = [];
+        function findButtons(widget) {
+            if (widget instanceof MockStWidget) {
+                if (widget.props.label || widget.label) {
+                    allButtons.push(widget);
+                }
+                for (const c of widget.children) {
+                    findButtons(c);
+                }
+            }
+        }
+        findButtons(ext._popupContainer);
+
+        const btn5m = allButtons.find(b => (b.label || b.props.label || '').includes('5 minutos'));
+        assertTrue(btn5m !== undefined, 'found 5m button in popup container');
+
+        // 2b. Click 5m button and verify that scheduler reloadMode is set to numeric 300, not string '5m'
+        assertTrue(typeof btn5m.signals['clicked'] === 'function', 'button has click handler');
+        btn5m.signals['clicked']();
+
+        assertEqual(
+            ext._scheduler.getReloadMode(),
+            300,
+            'clicking 5m button must set scheduler reloadMode to numeric 300 in historyStore'
+        );
+
+        ext.disable();
+        ext.destroy();
+    } finally {
+        _setShellUiForTesting({ St: null, Clutter: null });
+    }
+});
+
 
 

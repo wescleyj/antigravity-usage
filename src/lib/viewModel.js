@@ -250,18 +250,19 @@ export function formatModelFamiliesList(families, activeModelStr = '') {
 /**
  * Formats the reload options for the popup menu.
  *
- * @param {number|string} [currentIntervalSec=180]
+ * @param {number|string} [currentMode='auto']
  * @param {boolean} [processRunning=false]
  * @returns {Array<object>}
  */
-export function formatReloadMenuOptions(currentIntervalSec = 180, processRunning = false) {
-    const isAutoSelected = currentIntervalSec === 180 || currentIntervalSec === 1800 || currentIntervalSec === 'auto';
+export function formatReloadMenuOptions(currentMode = 'auto', processRunning = false) {
+    const isAutoSelected = currentMode === 'auto' || currentMode === 180;
 
     return [
         {
             id: 'auto',
             label: 'Automático',
             seconds: processRunning ? 180 : 1800,
+            modeValue: 'auto',
             isSelected: isAutoSelected,
             detail: processRunning ? 'Auto (3m ativo)' : 'Auto (30m ocioso)',
         },
@@ -269,35 +270,40 @@ export function formatReloadMenuOptions(currentIntervalSec = 180, processRunning
             id: '1m',
             label: '1 minuto',
             seconds: 60,
-            isSelected: !isAutoSelected && currentIntervalSec === 60,
+            modeValue: 60,
+            isSelected: !isAutoSelected && currentMode === 60,
             detail: '60s',
         },
         {
             id: '5m',
             label: '5 minutos',
             seconds: 300,
-            isSelected: !isAutoSelected && currentIntervalSec === 300,
+            modeValue: 300,
+            isSelected: !isAutoSelected && currentMode === 300,
             detail: '5m',
         },
         {
             id: '15m',
             label: '15 minutos',
             seconds: 900,
-            isSelected: !isAutoSelected && currentIntervalSec === 900,
+            modeValue: 900,
+            isSelected: !isAutoSelected && currentMode === 900,
             detail: '15m',
         },
         {
             id: '30m',
             label: '30 minutos',
             seconds: 1800,
-            isSelected: !isAutoSelected && currentIntervalSec === 1800,
+            modeValue: 1800,
+            isSelected: !isAutoSelected && currentMode === 1800,
             detail: '30m',
         },
         {
             id: '1h',
             label: '1 hora',
             seconds: 3600,
-            isSelected: !isAutoSelected && currentIntervalSec === 3600,
+            modeValue: 3600,
+            isSelected: !isAutoSelected && currentMode === 3600,
             detail: '1h',
         },
     ];

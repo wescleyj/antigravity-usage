@@ -48,6 +48,19 @@ try {
 }
 
 /**
+ * Injects mock Shell UI modules for automated testing outside GNOME Shell compositor.
+ *
+ * @param {object} mocks
+ */
+export function _setShellUiForTesting(mocks = {}) {
+    if ('St' in mocks) St = mocks.St;
+    if ('Clutter' in mocks) Clutter = mocks.Clutter;
+    if ('Main' in mocks) Main = mocks.Main;
+    if ('PanelMenu' in mocks) PanelMenu = mocks.PanelMenu;
+    if ('PopupMenu' in mocks) PopupMenu = mocks.PopupMenu;
+}
+
+/**
  * Antigravity Quota Usage Extension for GNOME Shell 45-52
  */
 export default class AntigravityUsageExtension extends ExtensionBase {
@@ -169,7 +182,7 @@ export default class AntigravityUsageExtension extends ExtensionBase {
         menu.box.add_style_class_name('antigravity-popup-menu');
 
         this._popupContainer = new St.BoxLayout({
-            vertical: true,
+            orientation: (Clutter && Clutter.Orientation) ? Clutter.Orientation.VERTICAL : 1,
             style_class: 'antigravity-popup-container',
         });
 
@@ -189,7 +202,8 @@ export default class AntigravityUsageExtension extends ExtensionBase {
      * @private
      */
     async _refresh() {
-        this._isProcessRunning = checkAgyRunning();
+        const procRes = checkAgyRunning();
+        this._isProcessRunning = Boolean(procRes && procRes.running);
 
         try {
             if (this._client) {
@@ -250,10 +264,8 @@ export default class AntigravityUsageExtension extends ExtensionBase {
 
         const loadingLabel = new St.Label({
             text: 'Carregando cotas do Antigravity CLI...',
-            style_class: 'antigravity-header-subtitle',
-            x_align: Clutter.ActorAlign.CENTER,
-            margin_top: 10,
-            margin_bottom: 10,
+            style_class: 'antigravity-header-subtitle popup-loading-label',
+            x_align: Clutter ? Clutter.ActorAlign.CENTER : 2,
         });
         this._popupContainer.add_child(loadingLabel);
     }
@@ -272,7 +284,7 @@ export default class AntigravityUsageExtension extends ExtensionBase {
 
         // Header Section
         const headerBox = new St.BoxLayout({
-            vertical: true,
+            orientation: (Clutter && Clutter.Orientation) ? Clutter.Orientation.VERTICAL : 1,
             style_class: 'antigravity-popup-header',
         });
 
@@ -379,7 +391,7 @@ export default class AntigravityUsageExtension extends ExtensionBase {
         });
         this._popupContainer.add_child(reloadTitle);
 
-        const currentMode = this._scheduler ? this._scheduler.getMode() : 'auto';
+        const currentMode = this._scheduler ? this._scheduler.getReloadMode() : 'auto';
         const reloadOptions = formatReloadMenuOptions(currentMode, this._isProcessRunning);
 
         const reloadBox = new St.BoxLayout({
@@ -395,7 +407,8 @@ export default class AntigravityUsageExtension extends ExtensionBase {
             });
             btn.connect('clicked', () => {
                 if (this._scheduler) {
-                    this._scheduler.setReloadMode(opt.id);
+                    const modeVal = opt.id === 'auto' ? 'auto' : opt.seconds;
+                    this._scheduler.setReloadMode(modeVal);
                 }
                 this._updateUI(hasError);
             });
@@ -464,7 +477,7 @@ export default class AntigravityUsageExtension extends ExtensionBase {
      */
     _createCardWidget(bucketCard) {
         const card = new St.BoxLayout({
-            vertical: true,
+            orientation: (Clutter && Clutter.Orientation) ? Clutter.Orientation.VERTICAL : 1,
             style_class: 'quota-card',
         });
 
@@ -497,7 +510,10 @@ export default class AntigravityUsageExtension extends ExtensionBase {
         card.add_child(track);
 
         // Meta Info Row 1: Reset Countdown & Burn Rate
-        const metaRow1 = new St.BoxLayout({ x_expand: true, margin_top: 2 });
+        const metaRow1 = new St.BoxLayout({
+            x_expand: true,
+            style_class: 'quota-card-meta-row',
+        });
         const resetMeta = new St.Label({
             text: bucketCard.resetText,
             style_class: 'quota-card-meta',
